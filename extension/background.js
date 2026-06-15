@@ -4,6 +4,7 @@ let currentUrl = null;
 let currentTitle = null;
 let startTime = null;
 let currentVideoDuration = null;
+let currentChannel = null;
 let loggedForCurrentTab = false;
 let doomScrollTimer = null;
 
@@ -143,8 +144,8 @@ function isTracked(url) {
 }
 
 // Helper to send activity to backend
-function sendActivity(url, title, durationSeconds, isImmediate = false) {
-  console.log(`Checking threshold: ${title}. duration = ${durationSeconds}s. isImmediate = ${isImmediate}`);
+function sendActivity(url, title, durationSeconds, isImmediate = false, channel = null) {
+  console.log(`Checking threshold: ${title}. duration = ${durationSeconds}s. isImmediate = ${isImmediate}. channel = ${channel}`);
   
   // Enforce 90-second threshold ONLY for long-form YouTube videos
   if (isLongFormYoutubeVideo(url)) {
@@ -173,7 +174,8 @@ function sendActivity(url, title, durationSeconds, isImmediate = false) {
       body: JSON.stringify({
         url,
         title,
-        duration: durationSeconds
+        duration: durationSeconds,
+        channel: channel || currentChannel
       })
     })
     .then(res => res.json())
@@ -190,7 +192,7 @@ function sendActivity(url, title, durationSeconds, isImmediate = false) {
         chrome.storage.local.set({
           lastAnalysis: {
             title: data.activity.title,
-            channel: data.activity.domain,
+            channel: data.activity.channel || data.activity.domain,
             url: data.activity.url,
             duration: data.activity.duration,
             analysis: data.activity.analysis,
@@ -221,7 +223,7 @@ function stopTrackingCurrent() {
     
     if (isLongFormYoutubeVideo(currentUrl)) {
       if (durationSeconds >= 90) {
-        sendActivity(currentUrl, currentTitle, durationSeconds, true);
+        sendActivity(currentUrl, currentTitle, durationSeconds, true, currentChannel);
       } else {
         console.log(`Skipped long-form YouTube video: stayed only ${durationSeconds}s (< 90s threshold).`);
         chrome.storage.local.remove("lastAnalysis");
@@ -229,7 +231,7 @@ function stopTrackingCurrent() {
     } else {
       // Only log short content (e.g., Shorts, Instagram Reels, Doom scrolling) if duration >=5s
       if (durationSeconds >= 5 && (isDoomScrolling(currentUrl) || isLongFormYoutubeVideo(currentUrl) === false)) {
-        sendActivity(currentUrl, currentTitle, durationSeconds, true);
+        sendActivity(currentUrl, currentTitle, durationSeconds, true, currentChannel);
       } else {
         console.log(`Skipped non‑content site or short stay (${durationSeconds}s).`);
         chrome.storage.local.remove("lastAnalysis");
@@ -352,10 +354,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentTitle = message.title || message.url;
       startTime = Date.now();
       loggedForCurrentTab = false;
+      currentChannel = message.channel || null;
     }
     
     currentVideoDuration = message.videoDuration;
     if (message.title) currentTitle = message.title;
+    if (message.channel) currentChannel = message.channel;
     
     // Handle immediate trace for Short content
     const isShort = (currentVideoDuration && currentVideoDuration < 90) || isDoomScrolling(currentUrl);
@@ -370,7 +374,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (cleanUrl(currentUrl) === cleanUrl(message.url) && !loggedForCurrentTab) {
           console.log("User watched short content for 5s. Logging details immediately.");
           loggedForCurrentTab = true;
-          sendActivity(message.url, message.title, Math.round((Date.now() - startTime) / 1000), true);
+          sendActivity(message.url, message.title, Math.round((Date.now() - startTime) / 1000), true, message.channel);
         }
       }, remaining);
     }

@@ -305,7 +305,7 @@ export default function Dashboard() {
                 border: '1px solid var(--border)', 
                 borderRadius: '8px', 
                 padding: '8px', 
-                color: 'var(--text-primary)', 
+                color: 'var(--text-main)', 
                 fontSize: '12px',
                 resize: 'none',
                 outline: 'none',
@@ -380,7 +380,7 @@ export default function Dashboard() {
                   
                   <div className="top-sites" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {todayActivities.length === 0 ? (
-                      <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>
+                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>
                         No content tracked yet today. Make sure to stay on a site for more than 3 mins to record!
                       </div>
                     ) : (
@@ -399,9 +399,9 @@ export default function Dashboard() {
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <h5 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{act.title}</h5>
+                                <h5 style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-main)' }}>{act.title}</h5>
                                 <span style={{ fontSize: '11px', color: 'var(--accent)', marginRight: '10px' }}>{act.domain}</span>
-                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Spent: {durationStr}</span>
+                                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Spent: {durationStr}</span>
                               </div>
                               <button 
                                 onClick={() => toggleActivityDetails(act.id)}
@@ -422,8 +422,13 @@ export default function Dashboard() {
                             {/* Expanded Details section */}
                             {isExpanded && act.analysis && (
                               <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {act.channel && (
+                                  <div>
+                                    <strong>Channel/Creator:</strong> <span style={{ color: 'var(--text-main)', fontWeight: '500' }}>{act.channel}</span>
+                                  </div>
+                                )}
                                 <div>
-                                  <strong>Sentiment:</strong> <span style={{ color: act.analysis.sentiment === 'Positive' ? '#34d399' : act.analysis.sentiment === 'Negative' ? '#f87171' : 'var(--text-secondary)' }}>{act.analysis.sentiment || 'Neutral'}</span>
+                                  <strong>Sentiment:</strong> <span style={{ color: act.analysis.sentiment === 'Positive' ? '#34d399' : act.analysis.sentiment === 'Negative' ? '#f87171' : 'var(--text-muted)' }}>{act.analysis.sentiment || 'Neutral'}</span>
                                 </div>
                                 <div>
                                   <strong>Category:</strong> <span>{act.analysis.contentCategory || 'General'}</span>
@@ -432,11 +437,11 @@ export default function Dashboard() {
                                   <strong>Diet Score:</strong> <span style={{ color: scoreColor(act.analysis.learningScore) }}>{act.analysis.learningScore || 50}/100</span>
                                 </div>
                                 <div>
-                                  <strong>AI Summary:</strong> <p style={{ color: 'var(--text-secondary)', marginTop: '3px', lineHeight: '1.4' }}>{act.analysis.summary}</p>
+                                  <strong>AI Summary:</strong> <p style={{ color: 'var(--text-muted)', marginTop: '3px', lineHeight: '1.4' }}>{act.analysis.summary}</p>
                                 </div>
                                 <div>
                                   <strong>Key Learnings:</strong>
-                                  <ul style={{ paddingLeft: '16px', marginTop: '3px', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                  <ul style={{ paddingLeft: '16px', marginTop: '3px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '3px' }}>
                                     {(act.analysis.keyPoints || []).map((pt, index) => (
                                       <li key={index}>{pt}</li>
                                     ))}
@@ -444,7 +449,7 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                   <strong>Bubble Filter analysis & Diversification:</strong>
-                                  <p style={{ color: 'var(--text-secondary)', marginTop: '3px', lineHeight: '1.4' }}>
+                                  <p style={{ color: 'var(--text-muted)', marginTop: '3px', lineHeight: '1.4' }}>
                                     {(act.analysis.sentiment || '').toLowerCase().includes('negative') ? (
                                       <span style={{ color: '#f87171', fontWeight: '500' }}>
                                         ⚠️ Pessimistic Filter Bubble Warning: This content contains negative themes. Continuous consumption of negative material can skew your perspective, harm mental wellbeing, and trap you in a negative bubble.
@@ -470,7 +475,7 @@ export default function Dashboard() {
                   <h4>🔝 Top Visited Domains</h4>
                   <div className="top-sites">
                     {topWebsites.length === 0 ? (
-                      <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>
+                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>
                         No domains recorded yet today.
                       </div>
                     ) : (

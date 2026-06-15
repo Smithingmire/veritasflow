@@ -7,6 +7,7 @@ const ActivitySchema = new mongoose.Schema({
   domain: { type: String, required: true },
   title: { type: String, required: true },
   duration: { type: Number, required: true },
+  channel: { type: String },
   analysis: {
     status: { type: String, default: "analyzing" },
     summary: { type: String, default: "AI is analyzing this content..." },

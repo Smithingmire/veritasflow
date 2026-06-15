@@ -28,7 +28,7 @@ function formatDuration(seconds) {
 // Add a tracked website activity
 exports.addActivity = async (req, res) => {
   try {
-    const { url, title, duration } = req.body;
+    const { url, title, duration, channel } = req.body;
     if (!url || !title) {
       return res.status(400).json({ success: false, message: "URL and Title are required." });
     }
@@ -95,6 +95,7 @@ exports.addActivity = async (req, res) => {
       domain,
       title,
       duration: duration || 10,
+      channel,
       analysis: {
         status: "analyzing",
         summary: "AI is analyzing this content...",
