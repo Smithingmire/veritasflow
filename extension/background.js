@@ -153,15 +153,6 @@ function isTracked(url) {
 // Helper to send activity to backend
 function sendActivity(url, title, durationSeconds, isImmediate = false, channel = null) {
   console.log(`Checking threshold: ${title}. duration = ${durationSeconds}s. isImmediate = ${isImmediate}. channel = ${channel}`);
-  
-  // Enforce 90-second threshold ONLY for long-form YouTube videos
-  if (isLongFormYoutubeVideo(url)) {
-    if (durationSeconds < 90 && !isImmediate) {
-      console.log(`Skipped: YouTube Video duration ${durationSeconds}s was less than required 90s threshold.`);
-      chrome.storage.local.remove("lastAnalysis"); // Reset UI from loading state
-      return;
-    }
-  }
 
   chrome.storage.local.get("token", (res) => {
     if (!res.token) {
@@ -229,28 +220,15 @@ function stopTrackingCurrent() {
     const durationSeconds = Math.round((Date.now() - startTime) / 1000);
     const deltaSeconds = durationSeconds - alreadyLoggedDuration;
 
-    if (isLongFormYoutubeVideo(currentUrl)) {
-      if (durationSeconds >= 90) {
-        if (deltaSeconds > 0) {
-          sendActivity(currentUrl, currentTitle, deltaSeconds, true, currentChannel);
-        }
-      } else {
-        console.log(`Skipped long-form YouTube video: stayed only ${durationSeconds}s (< 90s threshold).`);
-        if (alreadyLoggedDuration === 0) {
-          chrome.storage.local.remove("lastAnalysis");
-        }
+    // Log the stay if total duration is at least 5 seconds
+    if (durationSeconds >= 5) {
+      if (deltaSeconds > 0) {
+        sendActivity(currentUrl, currentTitle, deltaSeconds, true, currentChannel);
       }
     } else {
-      // Only log short content (e.g., Shorts, Instagram Reels, Doom scrolling) if duration >= 5s
-      if (durationSeconds >= 5 && (isDoomScrolling(currentUrl) || isLongFormYoutubeVideo(currentUrl) === false)) {
-        if (deltaSeconds > 0) {
-          sendActivity(currentUrl, currentTitle, deltaSeconds, true, currentChannel);
-        }
-      } else {
-        console.log(`Skipped non‑content site or short stay (${durationSeconds}s).`);
-        if (alreadyLoggedDuration === 0) {
-          chrome.storage.local.remove("lastAnalysis");
-        }
+      console.log(`Skipped short stay (${durationSeconds}s).`);
+      if (alreadyLoggedDuration === 0) {
+        chrome.storage.local.remove("lastAnalysis");
       }
     }
   }

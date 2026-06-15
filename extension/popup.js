@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Handle Logout Click
   lnkLogout.addEventListener("click", () => {
-    removeStorage(["token", "user", "lastAnalysis", "signupRedirected"], () => {
+    removeStorage(["token", "user", "lastAnalysis"], () => {
       checkAuthState();
     });
   });

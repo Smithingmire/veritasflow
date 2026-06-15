@@ -22,7 +22,10 @@ export default function Dashboard() {
   
   // Chart Period & Selection Indices
   const [chartPeriod, setChartPeriod] = useState('weekly')
-  const [weeklyIndex, setWeeklyIndex] = useState(6) // Default to Sunday
+  const [weeklyIndex, setWeeklyIndex] = useState(() => {
+    const day = new Date().getDay();
+    return day === 0 ? 6 : day - 1;
+  })
   const [monthlyIndex, setMonthlyIndex] = useState(3) // Default to Week 4
 
   // Collapsible Activity Details state

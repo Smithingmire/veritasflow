@@ -310,48 +310,68 @@ exports.getDashboard = async (req, res) => {
       improvements.push({ date: "Yesterday", text: `Consistently consuming ${todayData.label.toLowerCase()} content.` });
     }
 
-    // 5. Weekly Data
+    // 5. Weekly Data (Current calendar week, starting from Monday)
     const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    
+    // Find the most recent Monday
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, ..., 6 is Saturday
+    const distanceToMonday = (currentDay === 0 ? 6 : currentDay - 1);
+    
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - distanceToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    // Create a map of the 7 days of the current week (Monday to Sunday)
     const weeklyMap = {};
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayName = daysOfWeek[d.getDay()];
-      weeklyMap[dayName] = { score: 0, focus: 0, distracted: 0, topSite: "None", count: 0, sumScores: 0 };
-    }
+    const orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    
+    orderedDays.forEach((dayName, idx) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + idx);
+      
+      const dateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+      
+      weeklyMap[dateStr] = {
+        day: dayName,
+        score: 0,
+        focus: 0,
+        distracted: 0,
+        topSite: "None",
+        count: 0,
+        sumScores: 0
+      };
+    });
 
     userActivities.forEach(act => {
       const actDate = new Date(act.timestamp);
-      const diffTime = Math.abs(new Date() - actDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const actDateStr = actDate.getFullYear() + "-" + String(actDate.getMonth() + 1).padStart(2, '0') + "-" + String(actDate.getDate()).padStart(2, '0');
       
-      if (diffDays <= 7) {
-        const dayName = daysOfWeek[actDate.getDay()];
-        if (weeklyMap[dayName]) {
-          const cat = ((act.analysis && act.analysis.contentCategory) || "").toLowerCase();
-          const isDistraction = cat.includes("social") || cat.includes("entertainment") || cat.includes("game");
-          
-          if (isDistraction) {
-            weeklyMap[dayName].distracted += act.duration;
-          } else {
-            weeklyMap[dayName].focus += act.duration;
-          }
-          
-          weeklyMap[dayName].sumScores += (act.analysis && act.analysis.learningScore) || 50;
-          weeklyMap[dayName].count++;
-          
-          if (weeklyMap[dayName].topSite === "None" || act.duration > 30) {
-            weeklyMap[dayName].topSite = act.domain;
-          }
+      if (weeklyMap[actDateStr]) {
+        const dayData = weeklyMap[actDateStr];
+        const cat = ((act.analysis && act.analysis.contentCategory) || "").toLowerCase();
+        const isDistraction = cat.includes("social") || cat.includes("entertainment") || cat.includes("game");
+        
+        if (isDistraction) {
+          dayData.distracted += act.duration;
+        } else {
+          dayData.focus += act.duration;
+        }
+        
+        dayData.sumScores += (act.analysis && act.analysis.learningScore) || 50;
+        dayData.count++;
+        
+        if (dayData.topSite === "None" || act.duration > 30) {
+          dayData.topSite = act.domain;
         }
       }
     });
 
-    const weeklyData = Object.keys(weeklyMap).map(day => {
-      const dayData = weeklyMap[day];
+    const weeklyData = Object.keys(weeklyMap).map(dateStr => {
+      const dayData = weeklyMap[dateStr];
       const avgScore = dayData.count > 0 ? Math.round(dayData.sumScores / dayData.count) : 0;
       return {
-        day: day,
+        day: dayData.day,
         score: avgScore,
         focus: formatDuration(dayData.focus),
         distracted: formatDuration(dayData.distracted),
