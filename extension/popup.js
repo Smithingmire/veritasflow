@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fetch stats and history from the dashboard API
   function fetchDashboardData(token) {
-    fetch("http://localhost:5000/api/activity/dashboard", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity/dashboard", {
       headers: {
         "Authorization": `Bearer ${token}`
       }
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLogin.disabled = true;
     btnLogin.textContent = "Authenticating...";
 
-    fetch("http://localhost:5000/api/activity/auth/login", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -10,7 +10,7 @@
     "tabs"
   ],
   "host_permissions": [
-    "http://localhost:5000/*",
+    "https://veritasflow-yrbx.onrender.com/*",
     "<all_urls>"
   ],
   "background": {

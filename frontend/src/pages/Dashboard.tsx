@@ -44,7 +44,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const token = authService.getToken()
-      const res = await fetch("http://localhost:5000/api/activity/dashboard", {
+      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/dashboard", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()
@@ -60,7 +60,7 @@ export default function Dashboard() {
   const fetchSettings = async () => {
     try {
       const token = authService.getToken()
-      const res = await fetch("http://localhost:5000/api/activity/settings", {
+      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/settings", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()
@@ -91,7 +91,7 @@ export default function Dashboard() {
   const saveSettings = async (newTracked, newBlocked, newFocusVal) => {
     try {
       const token = authService.getToken()
-      await fetch("http://localhost:5000/api/activity/settings", {
+      await fetch("https://veritasflow-yrbx.onrender.com/api/activity/settings", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -152,7 +152,7 @@ export default function Dashboard() {
     setFeedbackSuccess('')
     try {
       const token = authService.getToken()
-      const res = await fetch("http://localhost:5000/api/activity/feedback", {
+      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

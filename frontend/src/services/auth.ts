@@ -5,7 +5,7 @@
 class AuthService {
   async signup(username, email, password, consent) {
     try {
-      const res = await fetch("http://localhost:5000/api/activity/auth/register", {
+      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password, consent })
@@ -26,7 +26,7 @@ class AuthService {
 
   async login(username, password) {
     try {
-      const res = await fetch("http://localhost:5000/api/activity/auth/login", {
+      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })

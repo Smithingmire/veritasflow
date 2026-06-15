@@ -52,7 +52,7 @@ function fetchSettings() {
   chrome.storage.local.get("token", (res) => {
     if (!res.token) return;
     
-    fetch("http://localhost:5000/api/activity/settings", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity/settings", {
       headers: {
         "Authorization": `Bearer ${res.token}`
       }
@@ -164,7 +164,7 @@ function sendActivity(url, title, durationSeconds, isImmediate = false) {
 
     console.log(`Sending activity: ${title} (${url}) for ${durationSeconds}s`);
     
-    fetch("http://localhost:5000/api/activity", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
