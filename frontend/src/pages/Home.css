@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Custom Customizations for Liquid Glass ───────────────── */
+
+/* Frosted Glass Panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 20px 0 rgba(255, 255, 255, 0.02);
+  transition: border-color 0.4s ease, background-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Glass panel hover states */
+.glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.7),
+    0 0 20px 2px rgba(255, 255, 255, 0.02),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* Liquid Segmented Controls */
+.liquid-tabs {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 9999px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Liquid Blob Glows */
+.liquid-blob {
+  filter: blur(80px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* Smooth Scrolling Customization */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Text Gradient Utilities */
+.text-gradient {
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.9) 0%, rgba(196, 181, 253, 0.9) 50%, rgba(153, 246, 228, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.8), rgba(147, 197, 253, 0.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-purple {
+  background: linear-gradient(135deg, rgba(196, 181, 253, 0.8), rgba(244, 163, 220, 0.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Connected pipeline visualization line */
+.pipeline-gradient-line {
+  background: linear-gradient(to bottom, rgba(125, 211, 252, 0.5) 0%, rgba(196, 181, 253, 0.5) 50%, rgba(153, 246, 228, 0.5) 100%);
+}
+
+/* Glowing ambient borders */
+.glow-border {
+  position: relative;
+}
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.25), rgba(196, 181, 253, 0.25), rgba(153, 246, 228, 0.25));
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.glow-border:hover::after {
+  opacity: 1;
+}
+
+/* Subtle mouse glow reflection wrapper */
+.mouse-glow-reflector {
+  position: relative;
+  overflow: hidden;
+}
+.mouse-glow-reflector::before {
+  content: '';
+  position: absolute;
+  top: var(--mouse-y, 0px);
+  left: var(--mouse-x, 0px);
+  width: 250px;
+  height: 250px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+.mouse-glow-reflector:hover::before {
+  opacity: 1;
+}

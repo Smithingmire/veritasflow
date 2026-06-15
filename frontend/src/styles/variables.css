@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Ultra-Premium Glassmorphic Dark Space Palette */
+  --bg: #07080e;               /* Sleek dark space background */
+  --surface: rgba(255, 255, 255, 0.025); /* Semi-transparent card */
+  --border: rgba(255, 255, 255, 0.08); /* Cyber border */
+  
+  --accent: #8b5cf6;          /* Neon electric violet */
+  --accent-glow: rgba(139, 92, 246, 0.3);
+  --accent-light: rgba(139, 92, 246, 0.1);
+  
+  --accent-green: #10b981;     /* Vivid emerald for healthy scores */
+  --accent-green-light: rgba(16, 185, 129, 0.12);
+  
+  --accent-orange: #f59e0b;    /* Orange warning */
+  --accent-orange-light: rgba(245, 158, 11, 0.12);
+  
+  --text-main: #f9fafb;       /* Bright off-white */
+  --text-muted: #9ca3af;      /* Muted grey */
+  
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  
+  --r-card: 16px;
+  --r-btn: 10px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}

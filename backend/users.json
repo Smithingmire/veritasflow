@@ -1,0 +1,88 @@
+[
+  {
+    "username": "demo",
+    "email": "demo@veritasflow.app",
+    "password": "password",
+    "consent": true,
+    "token": "tk_demo",
+    "settings": {
+      "trackedWebsites": [
+        "youtube.com",
+        "reddit.com",
+        "twitter.com",
+        "medium.com",
+        "wikipedia.org"
+      ],
+      "blockedWebsites": [
+        "instagram.com",
+        "tiktok.com"
+      ],
+      "focusMode": false
+    }
+  },
+  {
+    "username": "smit",
+    "email": "smit@gmail.com",
+    "password": "123456",
+    "consent": true,
+    "token": "tk_ujzbi4i7i",
+    "settings": {
+      "trackedWebsites": [
+        "youtube.com",
+        "reddit.com",
+        "twitter.com",
+        "medium.com",
+        "wikipedia.org"
+      ],
+      "blockedWebsites": [
+        "instagram.com",
+        "tiktok.com"
+      ],
+      "focusMode": false
+    }
+  },
+  {
+    "username": "smithingmire",
+    "email": "smithingmire12@gmail.com",
+    "password": "123456",
+    "consent": true,
+    "token": "tk_zeybfpokk",
+    "settings": {
+      "trackedWebsites": [
+        "youtube.com",
+        "reddit.com",
+        "twitter.com",
+        "medium.com",
+        "wikipedia.org",
+        "github.com"
+      ],
+      "blockedWebsites": [
+        "instagram.com",
+        "tiktok.com"
+      ],
+      "focusMode": true
+    }
+  },
+  {
+    "username": "abc",
+    "email": "abc@gmail.com",
+    "password": "123456789",
+    "consent": true,
+    "token": "tk_obfex5jsa",
+    "settings": {
+      "trackedWebsites": [
+        "youtube.com",
+        "reddit.com",
+        "twitter.com",
+        "medium.com",
+        "wikipedia.org",
+        "github.com"
+      ],
+      "blockedWebsites": [
+        "instagram.com",
+        "tiktok.com"
+      ],
+      "focusMode": true
+    }
+  }
+]

@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "VeritasFlow",
+  "version": "1.0",
+  "description": "Understand What You Consume In your Eveyday Life.",
+  "permissions": [
+    "storage",
+    "notifications",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    },
+    {
+      "matches": [
+        "http://localhost:5173/*"
+      ],
+      "js": [
+        "sync-content.js"
+      ],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "http://localhost:5173/*"
+      ],
+      "js": [
+        "sync-page.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
