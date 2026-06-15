@@ -26,4 +26,15 @@
 
   // Regular polling to catch local React state/localStorage transitions
   setInterval(syncTokens, 1000);
+
+  // Listen for logout events from the extension content script
+  window.addEventListener("message", (event) => {
+    if (event.source !== window) return;
+    if (event.data && event.data.type === "VERITASFLOW_EXTENSION_LOGOUT") {
+      console.log("Received logout event from extension. Clearing local storage.");
+      localStorage.removeItem("vf_token");
+      localStorage.removeItem("vf_current_user");
+      window.location.reload();
+    }
+  });
 })();

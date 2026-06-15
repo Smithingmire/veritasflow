@@ -6,6 +6,7 @@ let startTime = null;
 let currentVideoDuration = null;
 let currentChannel = null;
 let loggedForCurrentTab = false;
+let alreadyLoggedDuration = 0; // Tracks duration already saved for this session to avoid duplication
 let doomScrollTimer = null;
 
 let settings = {
@@ -20,6 +21,12 @@ function cleanUrl(url) {
   try {
     const parsed = new URL(url);
     let cleaned = parsed.origin + parsed.pathname;
+    
+    // Retain the YouTube video ID if it exists to differentiate between watch sessions
+    if (parsed.hostname.includes("youtube.com") && parsed.searchParams.has("v")) {
+      cleaned += "?v=" + parsed.searchParams.get("v");
+    }
+    
     if (cleaned.endsWith("/")) {
       cleaned = cleaned.slice(0, -1);
     }
@@ -218,23 +225,32 @@ function stopTrackingCurrent() {
     doomScrollTimer = null;
   }
 
-  if (startTime && currentUrl && currentTitle && !loggedForCurrentTab) {
+  if (startTime && currentUrl && currentTitle) {
     const durationSeconds = Math.round((Date.now() - startTime) / 1000);
-    
+    const deltaSeconds = durationSeconds - alreadyLoggedDuration;
+
     if (isLongFormYoutubeVideo(currentUrl)) {
       if (durationSeconds >= 90) {
-        sendActivity(currentUrl, currentTitle, durationSeconds, true, currentChannel);
+        if (deltaSeconds > 0) {
+          sendActivity(currentUrl, currentTitle, deltaSeconds, true, currentChannel);
+        }
       } else {
         console.log(`Skipped long-form YouTube video: stayed only ${durationSeconds}s (< 90s threshold).`);
-        chrome.storage.local.remove("lastAnalysis");
+        if (alreadyLoggedDuration === 0) {
+          chrome.storage.local.remove("lastAnalysis");
+        }
       }
     } else {
-      // Only log short content (e.g., Shorts, Instagram Reels, Doom scrolling) if duration >=5s
+      // Only log short content (e.g., Shorts, Instagram Reels, Doom scrolling) if duration >= 5s
       if (durationSeconds >= 5 && (isDoomScrolling(currentUrl) || isLongFormYoutubeVideo(currentUrl) === false)) {
-        sendActivity(currentUrl, currentTitle, durationSeconds, true, currentChannel);
+        if (deltaSeconds > 0) {
+          sendActivity(currentUrl, currentTitle, deltaSeconds, true, currentChannel);
+        }
       } else {
         console.log(`Skipped non‑content site or short stay (${durationSeconds}s).`);
-        chrome.storage.local.remove("lastAnalysis");
+        if (alreadyLoggedDuration === 0) {
+          chrome.storage.local.remove("lastAnalysis");
+        }
       }
     }
   }
@@ -244,6 +260,7 @@ function stopTrackingCurrent() {
   currentUrl = null;
   currentTitle = null;
   currentVideoDuration = null;
+  alreadyLoggedDuration = 0;
   loggedForCurrentTab = false;
 }
 
@@ -273,6 +290,7 @@ function startTracking(tabId, url, title) {
       currentTitle = title || url;
       startTime = Date.now();
       currentVideoDuration = null;
+      alreadyLoggedDuration = 0;
       loggedForCurrentTab = false;
       console.log(`Started tracking: ${currentTitle} (${currentUrl})`);
       
@@ -353,6 +371,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentUrl = message.url;
       currentTitle = message.title || message.url;
       startTime = Date.now();
+      alreadyLoggedDuration = 0;
       loggedForCurrentTab = false;
       currentChannel = message.channel || null;
     }
@@ -362,8 +381,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.channel) currentChannel = message.channel;
     
     // Handle immediate trace for Short content
-    const isShort = (currentVideoDuration && currentVideoDuration < 90) || isDoomScrolling(currentUrl);
-    if (isShort && !loggedForCurrentTab) {
+    // We treat it as short content if the video duration is known and < 90s, OR if it's doom scrolling,
+    // OR if the video duration is not known yet (so we don't miss logging it if the user leaves early)
+    const isShort = (currentVideoDuration && currentVideoDuration < 90) || isDoomScrolling(currentUrl) || !currentVideoDuration;
+    if (isShort && alreadyLoggedDuration === 0) {
       if (doomScrollTimer) clearTimeout(doomScrollTimer);
       
       const elapsed = Date.now() - startTime;
@@ -371,10 +392,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       
       console.log(`Short content detected. Elapsed: ${elapsed}ms. Setting timer for remaining ${remaining}ms.`);
       doomScrollTimer = setTimeout(() => {
-        if (cleanUrl(currentUrl) === cleanUrl(message.url) && !loggedForCurrentTab) {
-          console.log("User watched short content for 5s. Logging details immediately.");
-          loggedForCurrentTab = true;
-          sendActivity(message.url, message.title, Math.round((Date.now() - startTime) / 1000), true, message.channel);
+        if (cleanUrl(currentUrl) === cleanUrl(message.url) && alreadyLoggedDuration === 0) {
+          console.log("User watched content for 5s. Logging details immediately.");
+          alreadyLoggedDuration = Math.round((Date.now() - startTime) / 1000);
+          sendActivity(message.url, message.title, alreadyLoggedDuration, true, message.channel);
         }
       }, remaining);
     }

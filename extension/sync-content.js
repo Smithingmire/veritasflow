@@ -17,3 +17,11 @@ window.addEventListener("message", (event) => {
     });
   }
 });
+
+// Listen for storage changes in the extension (e.g. logout from popup) to sync back to website
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === "local" && changes.token && !changes.token.newValue) {
+    console.log("Syncing: Extension user logged out. Clearing website session.");
+    window.postMessage({ type: "VERITASFLOW_EXTENSION_LOGOUT" }, "*");
+  }
+});
