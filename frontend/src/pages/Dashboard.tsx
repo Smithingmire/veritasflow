@@ -672,7 +672,7 @@ export default function Dashboard() {
                       </div>
                       <div className="score-mini-chart">
                         {monthlyList.map((d, i) => (
-                          <div className={`mini-bar ${monthlyIndex === i ? 'active' : ''}`}
+                          <div className={`mini-bar ${monthlyIndex === i ? 'active' : ''} ${i === monthlyList.length - 1 ? 'today' : ''}`}
                             key={i}
                             style={{ height: `${d.score}%` }}
                             onClick={() => setMonthlyIndex(i)}
@@ -682,8 +682,8 @@ export default function Dashboard() {
                       </div>
                       <div className="mini-labels">
                         {monthlyList.map((d, i) => (
-                          <span key={i} className={monthlyIndex === i ? 'active' : ''}>
-                            {d.day.replace("This Week", "Now").replace("Week ", "W")}
+                          <span key={i} className={`${monthlyIndex === i ? 'active' : ''} ${i === monthlyList.length - 1 ? 'today-label' : ''}`}>
+                            {d.day.replace("This Week", "Week 4")}
                           </span>
                         ))}
                       </div>
