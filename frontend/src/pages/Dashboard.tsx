@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Compass } from 'lucide-react'
+import { Compass, ShieldCheck, ShieldAlert } from 'lucide-react'
 import { authService } from '../services/auth'
 import './Dashboard.css'
 const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
@@ -248,6 +248,41 @@ export default function Dashboard() {
   const todayTotalTime = formatTotalTime(todayActivities);
   const selectedDayTime = formatTotalTime(selectedDayActivities);
 
+
+  const credibilityStats = (() => {
+    let totalNewsCount = 0;
+    let lowRiskCount = 0;
+    let mediumRiskCount = 0;
+    let highRiskCount = 0;
+
+    selectedDayActivities.forEach(act => {
+      if (act.analysis) {
+        totalNewsCount++;
+        const risk = (act.analysis.fakeNewsRisk || 'Low').toLowerCase();
+        if (risk === 'high') {
+          highRiskCount++;
+        } else if (risk === 'medium') {
+          mediumRiskCount++;
+        } else {
+          lowRiskCount++;
+        }
+      }
+    });
+
+    let score = 100;
+    if (totalNewsCount > 0) {
+      score = Math.round(((lowRiskCount * 100) + (mediumRiskCount * 50) + (highRiskCount * 0)) / totalNewsCount);
+    }
+
+    return {
+      totalNewsCount,
+      lowRiskCount,
+      mediumRiskCount,
+      highRiskCount,
+      score,
+      rating: score >= 85 ? 'Highly Reliable' : score >= 60 ? 'Generally Reliable' : 'Caution Advised'
+    };
+  })();
 
   const todayWeeklyIndex = weeklyList.findIndex(d => d.isToday)
 
@@ -508,6 +543,24 @@ export default function Dashboard() {
                                   <strong>Diet Score:</strong> <span style={{ color: scoreColor(act.analysis.learningScore) }}>{act.analysis.learningScore || 50}/100</span>
                                 </div>
                                 <div>
+                                  <strong>Source Credibility:</strong>{' '}
+                                  <span style={{
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    padding: '2px 8px',
+                                    borderRadius: '6px',
+                                    display: 'inline-block',
+                                    marginLeft: '6px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.04em',
+                                    background: act.analysis.fakeNewsRisk === 'High' ? 'rgba(239, 68, 68, 0.12)' : act.analysis.fakeNewsRisk === 'Medium' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(16, 185, 129, 0.12)',
+                                    color: act.analysis.fakeNewsRisk === 'High' ? '#f87171' : act.analysis.fakeNewsRisk === 'Medium' ? '#fbbf24' : '#34d399',
+                                    border: act.analysis.fakeNewsRisk === 'High' ? '1px solid rgba(239, 68, 68, 0.25)' : act.analysis.fakeNewsRisk === 'Medium' ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(16, 185, 129, 0.25)'
+                                  }}>
+                                    {(act.analysis.fakeNewsRisk || 'Low').toUpperCase()} RISK
+                                  </span>
+                                </div>
+                                <div>
                                   <strong>AI Summary:</strong> <p style={{ color: 'var(--text-muted)', marginTop: '3px', lineHeight: '1.4' }}>{act.analysis.summary}</p>
                                 </div>
                                 <div>
@@ -566,6 +619,122 @@ export default function Dashboard() {
               </div>
 
               <div className="dash-col">
+
+                <div className="panel-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {credibilityStats.score >= 60 ? (
+                        <ShieldCheck className="w-4 h-4" style={{ color: '#34d399', width: '16px', height: '16px' }} />
+                      ) : (
+                        <ShieldAlert className="w-4 h-4" style={{ color: '#f87171', width: '16px', height: '16px' }} />
+                      )}
+                      📰 News Transparency & Credibility
+                    </h4>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      background: credibilityStats.score >= 85 ? 'rgba(16, 185, 129, 0.12)' : credibilityStats.score >= 60 ? 'rgba(245, 158, 11, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                      color: credibilityStats.score >= 85 ? '#34d399' : credibilityStats.score >= 60 ? '#fbbf24' : '#f87171',
+                      border: credibilityStats.score >= 85 ? '1px solid rgba(16, 185, 129, 0.25)' : credibilityStats.score >= 60 ? '1px solid rgba(245, 158, 11, 0.25)' : '1px solid rgba(239, 68, 68, 0.25)'
+                    }}>
+                      {credibilityStats.rating}
+                    </span>
+                  </div>
+                  
+                  <p className="sidebar-hint" style={{ margin: 0 }}>
+                    Real-time reliability rating of sources consumed on {selectedWeekly.day || 'Today'} based on AI analysis of misinformation risk.
+                  </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '8px 0' }}>
+                    <div style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0 }}>
+                      <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="rgba(255, 255, 255, 0.03)"
+                          strokeWidth="3.5"
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke={credibilityStats.score >= 85 ? '#10b981' : credibilityStats.score >= 60 ? '#f59e0b' : '#ef4444'}
+                          strokeWidth="3.5"
+                          strokeDasharray={`${credibilityStats.score}, 100`}
+                          strokeLinecap="round"
+                          style={{ transition: 'stroke-dasharray 1s ease' }}
+                        />
+                      </svg>
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'column'
+                      }}>
+                        <span style={{ fontSize: '15px', fontWeight: '800', color: '#fff', fontFamily: 'var(--font-heading)' }}>
+                          {credibilityStats.score}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>CREDIBILITY INDEX</span>
+                      <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>
+                        {credibilityStats.totalNewsCount > 0 ? (
+                          <>Based on {credibilityStats.totalNewsCount} analyzed source{credibilityStats.totalNewsCount !== 1 ? 's' : ''}</>
+                        ) : (
+                          <>No sources analyzed for {selectedWeekly.day || 'Today'}</>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', background: 'rgba(255,255,255,0.01)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ fontSize: '10px', color: '#34d399', fontWeight: '700' }}>LOW RISK</span>
+                      <span style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>{credibilityStats.lowRiskCount}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
+                      <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '700' }}>MED RISK</span>
+                      <span style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>{credibilityStats.mediumRiskCount}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ fontSize: '10px', color: '#f87171', fontWeight: '700' }}>HIGH RISK</span>
+                      <span style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>{credibilityStats.highRiskCount}</span>
+                    </div>
+                  </div>
+
+                  {credibilityStats.totalNewsCount > 0 ? (
+                    credibilityStats.highRiskCount > 0 ? (
+                      <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px' }}>
+                        <p style={{ color: '#fca5a5', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>
+                          ⚠️ <strong>Misinformation Alert:</strong> You consumed {credibilityStats.highRiskCount} source{credibilityStats.highRiskCount !== 1 ? 's' : ''} classified as high fake news risk today. Cross-check statements before sharing.
+                        </p>
+                      </div>
+                    ) : credibilityStats.mediumRiskCount > 0 ? (
+                      <div style={{ padding: '10px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: '8px' }}>
+                        <p style={{ color: '#fde047', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>
+                          ℹ️ <strong>Moderate Bias Notice:</strong> Some consumed sources contain moderate risk of bias or unverified reports. Read critically and compare with alternative viewpoints.
+                        </p>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px' }}>
+                        <p style={{ color: '#34d399', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>
+                          ✅ <strong>Verified Stream:</strong> All consumed sources have a low fake news risk score. Your current information stream is highly transparent and reliable.
+                        </p>
+                      </div>
+                    )
+                  ) : (
+                    <div style={{ padding: '10px', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>
+                        No tracked web activity recorded for this day yet. News transparency reports will generate once you browse tracked sites.
+                      </p>
+                    </div>
+                  )}
+                </div>
 
                 <div className="panel-card" style={{ padding: '16px' }}>
                   <h4>🌀 Doomscrolling Index</h4>
