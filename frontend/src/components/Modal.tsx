@@ -432,6 +432,16 @@ export const TermsModal: React.FC<{
                 <strong>3. Disclaimer of Warranties</strong><br />
                 VeritasFlow is provided "as is" and "as available". We do not guarantee specific skill progression, academic improvements, or employment opportunities from following our advice.
               </p>
+              <p>
+                <strong>4. Analytics & Score Calculations</strong><br />
+                • <strong>Information Diet Score:</strong> Calculated as a duration-weighted average of AI-evaluated learning scores across all tracked activities: <code>Diet Score = Σ(Learning Score × Duration) / Total Duration</code>.<br />
+                • <strong>Distraction Time:</strong> Total active duration on content categorized under Entertainment, Social Media, or Gaming.<br />
+                • <strong>Focus Time:</strong> Total active duration on educational, career-oriented, scientific, or productivity-related content.
+              </p>
+              <p>
+                <strong>5. Content Recommendations & Targeting</strong><br />
+                We generate content and career recommendations based on your personal browsing history. These suggestions are served **only to registered users who have explicitly checked the consent checkbox during sign-up**. We do not track guest users, share your tracking data, or sell your profiles to third-party ad networks.
+              </p>
             </div>
             <button
               onClick={onClose}
