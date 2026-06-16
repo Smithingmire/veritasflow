@@ -39,6 +39,7 @@ export default function Dashboard() {
     improvements: [],
     weeklyData: [],
     monthlyData: [],
+    weekActivitiesMap: {},
     activities: []
   })
   const [loading, setLoading] = useState(true)
@@ -195,11 +196,18 @@ export default function Dashboard() {
   const improvements = dashboardData.improvements || []
   const weeklyList = dashboardData.weeklyData || []
   const monthlyList = dashboardData.monthlyData || []
+  const weekActivitiesMap = dashboardData.weekActivitiesMap || {}
   const todayActivities = dashboardData.activities || []
 
   // Safe selection metrics
-  const selectedWeekly = weeklyList[weeklyIndex] || { day: 'None', score: 0, focus: '0s', distracted: '0s', topSite: 'None' }
-  const selectedMonthly = monthlyList[monthlyIndex] || { day: 'None', score: 0, focus: '0s', distracted: '0s', topSite: 'None' }
+  const selectedWeekly = weeklyList[weeklyIndex] || { day: 'None', dateStr: '', isToday: false, score: 0, focus: '0s', distracted: '0s', topSite: 'None' }
+  const selectedMonthly = monthlyList[monthlyIndex] || { day: 'None', dateRange: '', score: 0, avgDietScore: 0, focus: '0s', distracted: '0s', topSite: 'None', totalActivities: 0 }
+
+  // Get activities for the selected day in weekly view
+  const selectedDayActivities = selectedWeekly.dateStr ? (weekActivitiesMap[selectedWeekly.dateStr] || []) : todayActivities
+
+  // Find current day index for highlighting
+  const todayWeeklyIndex = weeklyList.findIndex(d => d.isToday)
 
   return (
     <div className="dash">
@@ -378,16 +386,24 @@ export default function Dashboard() {
 
                 {/* Daily Activity Details Log with More Details functionality */}
                 <div className="panel-card top-sites-card activity-log-card">
-                  <h4>🔍 Daily Content consumption (Details)</h4>
-                  <p className="sidebar-hint" style={{ marginBottom: '12px' }}>Click "More Details" to see deep AI insights on content consumed today.</p>
+                  <h4>🔍 {selectedWeekly.isToday || !selectedWeekly.dateStr ? "Today's" : `${selectedWeekly.day}'s`} Content Consumption</h4>
+                  <p className="sidebar-hint" style={{ marginBottom: '12px' }}>
+                    {selectedWeekly.isToday || !selectedWeekly.dateStr
+                      ? 'Click "More Details" to see deep AI insights on content consumed today.'
+                      : `Showing content consumed on ${selectedWeekly.day} (${selectedWeekly.dateStr}). Click a day in the weekly chart to switch.`
+                    }
+                  </p>
                   
                   <div className="top-sites" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {todayActivities.length === 0 ? (
+                    {selectedDayActivities.length === 0 ? (
                       <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', fontSize: '13px' }}>
-                        No content tracked yet today. Make sure to stay on a site for more than 3 mins to record!
+                        {selectedWeekly.isToday || !selectedWeekly.dateStr
+                          ? 'No content tracked yet today. Start browsing tracked sites to see data!'
+                          : `No content was tracked on ${selectedWeekly.day}.`
+                        }
                       </div>
                     ) : (
-                      todayActivities.map((act) => {
+                      selectedDayActivities.map((act) => {
                         const isExpanded = expandedActivityId === act.id;
                         const durationMins = Math.floor(act.duration / 60);
                         const durationSecs = act.duration % 60;
@@ -515,28 +531,30 @@ export default function Dashboard() {
                       </div>
                       <div className="score-mini-chart">
                         {weeklyList.map((d, i) => (
-                          <div className={`mini-bar ${weeklyIndex === i ? 'active' : ''}`}
+                          <div className={`mini-bar ${weeklyIndex === i ? 'active' : ''} ${d.isToday ? 'today' : ''}`}
                             key={i}
-                            style={{ height: `${d.score}%` }}
+                            style={{ height: `${Math.max(d.score, 5)}%` }}
                             onClick={() => setWeeklyIndex(i)}
-                            title={`Click to view data for ${d.day}`}
+                            title={`Click to view data for ${d.day}${d.isToday ? ' (Today)' : ''}`}
                           />
                         ))}
                       </div>
                       <div className="mini-labels">
                         {weeklyList.map((d, i) => (
-                          <span key={i} className={weeklyIndex === i ? 'active' : ''}>
-                            {d.day.charAt(0)}
+                          <span key={i} className={`${weeklyIndex === i ? 'active' : ''} ${d.isToday ? 'today-label' : ''}`}>
+                            {d.day.charAt(0)}{d.isToday ? '•' : ''}
                           </span>
                         ))}
                       </div>
                       
                       {/* Selected Day Data Detail Card */}
                       <div className="chart-detail-box">
-                        <span className="detail-date">{selectedWeekly.day} Details</span>
+                        <span className="detail-date">
+                          {selectedWeekly.day} {selectedWeekly.isToday ? '(Today)' : ''} — {selectedWeekly.dateStr}
+                        </span>
                         <div className="detail-row-grid">
                           <div className="detail-col-item">
-                            <span className="detail-lbl">Diet Score</span>
+                            <span className="detail-lbl">Daily Diet Score</span>
                             <span className="detail-val" style={{ color: scoreColor(selectedWeekly.score) }}>
                               {selectedWeekly.score}/100
                             </span>
@@ -574,19 +592,19 @@ export default function Dashboard() {
                       <div className="mini-labels">
                         {monthlyList.map((d, i) => (
                           <span key={i} className={monthlyIndex === i ? 'active' : ''}>
-                            {d.day.replace("Week ", "W")}
+                            {d.day.replace("This Week", "Now").replace("Week ", "W")}
                           </span>
                         ))}
                       </div>
                       
                       {/* Selected Week Data Detail Card */}
                       <div className="chart-detail-box">
-                        <span className="detail-date">{selectedMonthly.day} Details</span>
+                        <span className="detail-date">{selectedMonthly.day} — {selectedMonthly.dateRange || ''}</span>
                         <div className="detail-row-grid">
                           <div className="detail-col-item">
-                            <span className="detail-lbl">Diet Score</span>
-                            <span className="detail-val" style={{ color: scoreColor(selectedMonthly.score) }}>
-                              {selectedMonthly.score}/100
+                            <span className="detail-lbl">Avg Diet Score</span>
+                            <span className="detail-val" style={{ color: scoreColor(selectedMonthly.avgDietScore || selectedMonthly.score) }}>
+                              {selectedMonthly.avgDietScore || selectedMonthly.score}/100
                             </span>
                           </div>
                           <div className="detail-col-item">
@@ -598,8 +616,8 @@ export default function Dashboard() {
                             <span className="detail-val">{selectedMonthly.distracted}</span>
                           </div>
                           <div className="detail-col-item">
-                            <span className="detail-lbl">Top Domain</span>
-                            <span className="detail-val detail-site">{selectedMonthly.topSite}</span>
+                            <span className="detail-lbl">Activities</span>
+                            <span className="detail-val">{selectedMonthly.totalActivities || 0}</span>
                           </div>
                         </div>
                       </div>

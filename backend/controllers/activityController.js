@@ -216,6 +216,10 @@ exports.getDashboard = async (req, res) => {
 
     const todayActivities = userActivities.filter(act => new Date(act.timestamp) >= startOfToday);
 
+    // Filter for display: only show activities with >= 90 seconds duration
+    const MIN_DISPLAY_DURATION = 90;
+    const todayActivitiesForDisplay = todayActivities.filter(act => act.duration >= MIN_DISPLAY_DURATION);
+
     // 1. Calculate Today's Diet Score (Weighted by duration)
     let totalTodayDuration = 0;
     let weightedScoreSum = 0;
@@ -269,9 +273,9 @@ exports.getDashboard = async (req, res) => {
       ]
     };
 
-    // 2. Aggregate Top Visited Websites
+    // 2. Aggregate Top Visited Websites (today only, >= 90s activities)
     const siteAggregations = {};
-    userActivities.forEach(act => {
+    todayActivitiesForDisplay.forEach(act => {
       const dom = act.domain;
       if (!siteAggregations[dom]) {
         siteAggregations[dom] = {
@@ -311,10 +315,9 @@ exports.getDashboard = async (req, res) => {
     }
 
     // 5. Weekly Data (Current calendar week, starting from Monday)
-    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    
     // Find the most recent Monday
     const today = new Date();
+    const todayDateStr = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
     const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, ..., 6 is Saturday
     const distanceToMonday = (currentDay === 0 ? 6 : currentDay - 1);
     
@@ -325,23 +328,33 @@ exports.getDashboard = async (req, res) => {
     // Create a map of the 7 days of the current week (Monday to Sunday)
     const weeklyMap = {};
     const orderedDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const weekDateStrings = []; // track ordered date strings
     
     orderedDays.forEach((dayName, idx) => {
       const d = new Date(monday);
       d.setDate(monday.getDate() + idx);
       
       const dateStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+      weekDateStrings.push(dateStr);
       
       weeklyMap[dateStr] = {
         day: dayName,
+        dateStr: dateStr,
+        isToday: dateStr === todayDateStr,
         score: 0,
         focus: 0,
         distracted: 0,
         topSite: "None",
         count: 0,
-        sumScores: 0
+        sumScores: 0,
+        weightedScoreSum: 0,
+        totalDuration: 0
       };
     });
+
+    // Build a map of activities grouped by date for the week
+    const weekActivitiesMap = {};
+    weekDateStrings.forEach(ds => { weekActivitiesMap[ds] = []; });
 
     userActivities.forEach(act => {
       const actDate = new Date(act.timestamp);
@@ -358,56 +371,93 @@ exports.getDashboard = async (req, res) => {
           dayData.focus += act.duration;
         }
         
-        dayData.sumScores += (act.analysis && act.analysis.learningScore) || 50;
+        const actScore = (act.analysis && act.analysis.learningScore) || 50;
+        dayData.sumScores += actScore;
+        dayData.weightedScoreSum += actScore * act.duration;
+        dayData.totalDuration += act.duration;
         dayData.count++;
         
         if (dayData.topSite === "None" || act.duration > 30) {
           dayData.topSite = act.domain;
         }
+
+        // Add to activities map for this date (only if >= 90s)
+        if (act.duration >= MIN_DISPLAY_DURATION) {
+          weekActivitiesMap[actDateStr].push({
+            id: act.id,
+            url: act.url,
+            domain: act.domain,
+            title: act.title,
+            duration: act.duration,
+            channel: act.channel,
+            analysis: act.analysis,
+            timestamp: act.timestamp
+          });
+        }
       }
     });
 
-    const weeklyData = Object.keys(weeklyMap).map(dateStr => {
+    const weeklyData = weekDateStrings.map(dateStr => {
       const dayData = weeklyMap[dateStr];
-      const avgScore = dayData.count > 0 ? Math.round(dayData.sumScores / dayData.count) : 0;
+      // Daily diet score: weighted by duration (not simple average)
+      const dailyDietScore = dayData.totalDuration > 0 
+        ? Math.round(dayData.weightedScoreSum / dayData.totalDuration) 
+        : 0;
       return {
         day: dayData.day,
-        score: avgScore,
+        dateStr: dayData.dateStr,
+        isToday: dayData.isToday,
+        score: dailyDietScore,
         focus: formatDuration(dayData.focus),
         distracted: formatDuration(dayData.distracted),
         topSite: dayData.topSite
       };
     });
 
-    // 6. Monthly Data (dynamically generated from last 4 weeks)
+    // 6. Monthly Data (last 4 calendar weeks, each starting from Monday)
     const monthlyData = [];
     for (let week = 0; week < 4; week++) {
-      const weekEnd = new Date();
-      weekEnd.setDate(weekEnd.getDate() - (week * 7));
-      const weekStart = new Date(weekEnd);
-      weekStart.setDate(weekStart.getDate() - 7);
+      // Each week ends on the Sunday before the previous week's Monday
+      const weekStart = new Date(monday);
+      weekStart.setDate(monday.getDate() - (week * 7));
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      weekEnd.setHours(0, 0, 0, 0);
 
       const weekActivities = userActivities.filter(act => {
         const t = new Date(act.timestamp);
         return t >= weekStart && t < weekEnd;
       });
 
-      let wFocus = 0, wDistracted = 0, wScoreSum = 0, wCount = 0, wTopSite = "None";
+      let wFocus = 0, wDistracted = 0, wWeightedScoreSum = 0, wTotalDuration = 0, wCount = 0, wTopSite = "None";
       weekActivities.forEach(act => {
         const cat = ((act.analysis && act.analysis.contentCategory) || "").toLowerCase();
         const isDistraction = cat.includes("social") || cat.includes("entertainment") || cat.includes("game");
         if (isDistraction) { wDistracted += act.duration; } else { wFocus += act.duration; }
-        wScoreSum += (act.analysis && act.analysis.learningScore) || 50;
+        const actScore = (act.analysis && act.analysis.learningScore) || 50;
+        wWeightedScoreSum += actScore * act.duration;
+        wTotalDuration += act.duration;
         wCount++;
         if (wTopSite === "None") wTopSite = act.domain;
       });
 
+      // Format date range label
+      const startLabel = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endDate = new Date(weekEnd);
+      endDate.setDate(endDate.getDate() - 1);
+      const endLabel = endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
       monthlyData.unshift({
-        day: `Week ${4 - week}`,
-        score: wCount > 0 ? Math.round(wScoreSum / wCount) : 0,
+        day: week === 0 ? "This Week" : `Week ${4 - week}`,
+        dateRange: `${startLabel} – ${endLabel}`,
+        score: wTotalDuration > 0 ? Math.round(wWeightedScoreSum / wTotalDuration) : 0,
+        avgDietScore: wTotalDuration > 0 ? Math.round(wWeightedScoreSum / wTotalDuration) : 0,
         focus: formatDuration(wFocus),
         distracted: formatDuration(wDistracted),
-        topSite: wTopSite
+        topSite: wTopSite,
+        totalActivities: wCount
       });
     }
 
@@ -418,12 +468,14 @@ exports.getDashboard = async (req, res) => {
       improvements,
       weeklyData,
       monthlyData,
-      activities: todayActivities.map(act => ({
+      weekActivitiesMap,
+      activities: todayActivitiesForDisplay.map(act => ({
         id: act.id,
         url: act.url,
         domain: act.domain,
         title: act.title,
         duration: act.duration,
+        channel: act.channel,
         analysis: act.analysis,
         timestamp: act.timestamp
       }))

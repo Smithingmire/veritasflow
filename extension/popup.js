@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         const topItems = data.topWebsites.slice(0, 3);
         if (topItems.length === 0) {
-          topVisitedList.innerHTML = `<div style="font-size: 11px; color: var(--text-secondary); text-align: center; padding: 10px;">No tracked websites yet today.</div>`;
+          topVisitedList.innerHTML = `<div style="font-size: 11px; color: var(--text-secondary); text-align: center; padding: 10px;">No domains visited today (min 90s stay required).</div>`;
           return;
         }
         
