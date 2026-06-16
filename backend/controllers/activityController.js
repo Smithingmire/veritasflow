@@ -260,20 +260,98 @@ exports.getDashboard = async (req, res) => {
       .slice(0, 5)
       .map(site => ({ url: site.url, time: formatDuration(site.timeRaw), category: site.category }));
 
+    // --- DYNAMIC FILTER BUBBLE DETECTION & PERSPECTIVE DIVERSIFICATION ---
     const suggestions = [];
-    if (userActivities.length > 0) {
-      if (todayDietScore < 50) {
-        suggestions.push("Your diet score is below 50%. Try focusing on high-quality educational or productive content instead of mindless feeds.");
-      } else {
-        suggestions.push("Your content consumption is good! Keep up the healthy information diet.");
-      }
-    }
-
     const improvements = [
-      { date: "Today", text: totalTodayDuration > 0 ? `Tracked ${formatDuration(totalTodayDuration)} of active learning session` : "No website activity recorded yet today." }
+      { date: "Today", text: totalTodayDuration > 0 ? `Tracked ${formatDuration(totalTodayDuration)} of active learning session.` : "No website activity recorded yet today." }
     ];
-    if (userActivities.length > 5) {
-      improvements.push({ date: "Yesterday", text: `Consistently consuming ${todayData.label.toLowerCase()} content.` });
+
+    // Filter activities from the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentActivities = userActivities.filter(act => new Date(act.timestamp) >= sevenDaysAgo);
+
+    if (recentActivities.length > 0) {
+      let totalRecentDuration = 0;
+      const categoryDurations = {};
+      const sentimentDurations = {};
+
+      recentActivities.forEach(act => {
+        const dur = act.duration;
+        totalRecentDuration += dur;
+
+        const cat = (act.analysis && act.analysis.contentCategory) || "General";
+        categoryDurations[cat] = (categoryDurations[cat] || 0) + dur;
+
+        const sent = (act.analysis && act.analysis.sentiment) || "Neutral";
+        sentimentDurations[sent] = (sentimentDurations[sent] || 0) + dur;
+      });
+
+      // Find top category
+      let topCategory = "General";
+      let topCategoryDuration = 0;
+      for (const [cat, dur] of Object.entries(categoryDurations)) {
+        if (dur > topCategoryDuration) {
+          topCategory = cat;
+          topCategoryDuration = dur;
+        }
+      }
+
+      const topCatPercent = totalRecentDuration > 0 ? Math.round((topCategoryDuration / totalRecentDuration) * 100) : 0;
+
+      // Find top sentiment
+      let topSentiment = "Neutral";
+      let topSentimentDuration = 0;
+      for (const [sent, dur] of Object.entries(sentimentDurations)) {
+        if (dur > topSentimentDuration) {
+          topSentiment = sent;
+          topSentimentDuration = dur;
+        }
+      }
+      const topSentPercent = totalRecentDuration > 0 ? Math.round((topSentimentDuration / totalRecentDuration) * 100) : 0;
+
+      // 1. FILTER BUBBLE DETECTION
+      if (topCatPercent >= 55 && topCategory !== "General" && topCategory !== "Analyzing...") {
+        suggestions.push(`Filter Bubble Alert: You spent ${topCatPercent}% of your time in the "${topCategory}" category. Your information diet is highly concentrated here.`);
+        
+        // Perspective Diversification Recommendation
+        if (topCategory.toLowerCase().includes("tech") || topCategory.toLowerCase().includes("science")) {
+          suggestions.push("Perspective Diversification: We recommend balancing your technical topics by exploring humanities, history, or philosophy portals on Wikipedia.");
+        } else if (topCategory.toLowerCase().includes("entertainment") || topCategory.toLowerCase().includes("social")) {
+          suggestions.push("Focus Alert: High leisure consumption detected. Challenge yourself to spend 15 minutes reading a science or programming tutorial on Medium.");
+        } else {
+          suggestions.push(`Perspective Diversification: Try exploring a completely different topic, like Science, Business, or Art, to break your current ${topCategory} bubble.`);
+        }
+      } else {
+        suggestions.push("Information Diet Balance: Your content category consumption is well-diversified. Keep exploring different topics!");
+      }
+
+      // 2. SENTIMENT BIAS DETECTION (Filter Bubble of Tone)
+      if (topSentiment === "Negative" && topSentPercent >= 50) {
+        suggestions.push(`Sentiment Bias Detected: ${topSentPercent}% of the content you consumed carries negative sentiment. Consuming mostly negative content can contribute to Doom-scrolling fatigue.`);
+        suggestions.push("Counter-Perspective suggestion: Spend 10 minutes reading constructive news sites, positive research breakthroughs, or educational blogs to balance your perspective.");
+      } else if (topSentiment === "Positive" && topSentPercent >= 60) {
+        suggestions.push(`Echo Chamber Warning: ${topSentPercent}% of your consumed media has a positive bias. Make sure you read analytical, peer-reviewed, or critical viewpoints to stay fully informed.`);
+      }
+
+      // 3. SPECIFIC COUNTER-PERSPECTIVE CONTENT SUGGESTIONS
+      if (topCategory.toLowerCase().includes("tech") || topCategory.toLowerCase().includes("science")) {
+        suggestions.push("Suggested Counter-Perspective: Read 'The Ethical Implications of Artificial Intelligence' or explore Philosophy of Science resources.");
+      } else if (topCategory.toLowerCase().includes("entertainment") || topCategory.toLowerCase().includes("social")) {
+        suggestions.push("Suggested Counter-Perspective: Watch an educational video from Veritasium or Kurzegesagt to replace passive scrolling with active curiosity.");
+      } else {
+        suggestions.push("Suggested Counter-Perspective: Visit wikipedia.org's Featured Articles page to read high-quality content on topics outside your usual bubble.");
+      }
+
+      // Add a dynamic improvement log
+      if (totalRecentDuration > 0) {
+        improvements.push({
+          date: "This Week",
+          text: `Main category is ${topCategory} (${topCatPercent}%), top tone bias is ${topSentiment} (${topSentPercent}%).`
+        });
+      }
+    } else {
+      suggestions.push("Welcome! Start browsing to collect metrics. We will analyze your content categories and sentiments to detect filter bubbles and suggest counter-perspective topics.");
     }
 
     // weekly: current calendar week, Mon-Sun

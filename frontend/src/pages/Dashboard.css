@@ -666,7 +666,6 @@
 
 /* Today highlight for weekly bar */
 .mini-bar.today {
-  border-color: #22d3ee;
   position: relative;
 }
 
@@ -679,23 +678,12 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 8px #22d3ee;
-}
-
-.mini-bar.today:not(.active) {
-  background: rgba(34, 211, 238, 0.15);
-  border-color: rgba(34, 211, 238, 0.4);
-}
-
-.mini-bar.today.active {
-  background: linear-gradient(180deg, #22d3ee, #0891b2);
-  border-color: #67e8f9;
-  box-shadow: 0 0 20px rgba(34, 211, 238, 0.5);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
 }
 
 .mini-labels span.today-label {
-  color: #22d3ee;
+  color: var(--accent);
   font-weight: 800;
 }
 
