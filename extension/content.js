@@ -94,15 +94,24 @@ function showDoomScrollReminder() {
     document.body.appendChild(overlay);
 
     document.getElementById("vf-doom-close").addEventListener("click", () => {
-        chrome.runtime.sendMessage({ type: "CLOSE_TAB" });
+        try {
+            chrome.runtime.sendMessage({ type: "CLOSE_TAB" });
+        } catch (e) {
+            console.error("Context invalidated. Redirecting as fallback.", e);
+            window.location.href = "https://www.google.com";
+        }
     });
 
     // notify background about the reminder
-    chrome.runtime.sendMessage({
-        type: "DOOMSCROLL_REMINDER",
-        duration: elapsed,
-        url: location.href
-    });
+    try {
+        chrome.runtime.sendMessage({
+            type: "DOOMSCROLL_REMINDER",
+            duration: elapsed,
+            url: location.href
+        });
+    } catch (e) {
+        console.error("Context invalidated. Could not log doomscroll.", e);
+    }
 }
 
 function startDoomScrollTracking() {

@@ -68,13 +68,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Check login state first
   function checkAuthState() {
     getStorage(["token", "user", "signupRedirected"], (res) => {
+      const userDisplay = document.getElementById("user-display");
       if (res.token) {
         lnkLogout.style.display = "block";
+        if (userDisplay && res.user && res.user.username) {
+          userDisplay.textContent = `@${res.user.username}`;
+          userDisplay.style.display = "block";
+        } else if (userDisplay) {
+          userDisplay.style.display = "none";
+        }
         stateLogin.style.display = "none";
         stateDashboard.style.display = "flex";
         fetchDashboardData(res.token);
       } else {
         lnkLogout.style.display = "none";
+        if (userDisplay) userDisplay.style.display = "none";
         stateLogin.style.display = "flex";
         stateDashboard.style.display = "none";
 
@@ -90,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fetch stats and history from the dashboard API
   function fetchDashboardData(token) {
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity/dashboard", {
+    fetch("http://localhost:5000/api/activity/dashboard", {
       headers: {
         "Authorization": `Bearer ${token}`
       }
@@ -187,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLogin.disabled = true;
     btnLogin.textContent = "Authenticating...";
 
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/login", {
+    fetch("http://localhost:5000/api/activity/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
