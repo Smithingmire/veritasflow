@@ -381,4 +381,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
     return true;
   }
+
+  if (message.type === "DOOMSCROLL_REMINDER") {
+    console.log("Doomscroll reminder triggered:", message);
+    chrome.storage.local.get(["token", "doomScrollCount"], (res) => {
+      if (!res.token) return;
+
+      const count = (res.doomScrollCount || 0) + 1;
+      chrome.storage.local.set({ doomScrollCount: count });
+
+      fetch("https://veritasflow-yrbx.onrender.com/api/activity/doomscroll", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${res.token}`
+        },
+        body: JSON.stringify({
+          duration: message.duration,
+          url: message.url
+        })
+      })
+      .then(r => r.json())
+      .then(data => console.log("Doomscroll reminder logged:", data))
+      .catch(err => console.error("Error logging doomscroll:", err));
+    });
+
+    // show a chrome notification as well
+    chrome.notifications.create("doomscroll-alert", {
+      type: "basic",
+      iconUrl: "icon128.png",
+      title: "⚠️ Doomscrolling Alert",
+      message: `You've been scrolling short content for ${Math.floor(message.duration / 60)}+ minutes. Take a break!`,
+      priority: 2
+    });
+
+    sendResponse({ success: true });
+    return true;
+  }
 });

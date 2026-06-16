@@ -8,30 +8,31 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   
-  // Settings States (Fetched/Saved to Backend)
+
   const [accessWebsites, setAccessWebsites] = useState(['youtube.com', 'reddit.com', 'twitter.com', 'medium.com', 'wikipedia.org'])
   const [newSite, setNewSite] = useState('')
   const [focusBlocked, setFocusBlocked] = useState(['instagram.com', 'tiktok.com'])
   const [newBlock, setNewBlock] = useState('')
   const [focusMode, setFocusMode] = useState(false)
   
-  // Feedback States
+
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSuccess, setFeedbackSuccess] = useState('')
   const [feedbackLoading, setFeedbackLoading] = useState(false)
   
-  // Chart Period & Selection Indices
+
   const [chartPeriod, setChartPeriod] = useState('weekly')
   const [weeklyIndex, setWeeklyIndex] = useState(() => {
     const day = new Date().getDay();
     return day === 0 ? 6 : day - 1;
   })
   const [monthlyIndex, setMonthlyIndex] = useState(3) // Default to Week 4
+  const [yearlyIndex, setYearlyIndex] = useState(11) // Default to current month (last in array)
 
-  // Collapsible Activity Details state
+
   const [expandedActivityId, setExpandedActivityId] = useState(null)
 
-  // Real Backend Aggregated Data State
+
   const [dashboardData, setDashboardData] = useState({
     today: { score: 0, label: 'No Data Yet', breakdown: [] },
     topWebsites: [],
@@ -39,12 +40,13 @@ export default function Dashboard() {
     improvements: [],
     weeklyData: [],
     monthlyData: [],
+    yearlyData: [],
     weekActivitiesMap: {},
     activities: []
   })
   const [loading, setLoading] = useState(true)
 
-  // Fetch stats from backend
+
   const fetchDashboardData = async () => {
     try {
       const token = authService.getToken()
@@ -60,7 +62,7 @@ export default function Dashboard() {
     }
   }
 
-  // Fetch settings from backend
+
   const fetchSettings = async () => {
     try {
       const token = authService.getToken()
@@ -86,12 +88,12 @@ export default function Dashboard() {
     Promise.all([fetchDashboardData(), fetchSettings()])
       .finally(() => setLoading(false))
 
-    // Poll for changes every 5 seconds for responsive dashboard updates
+
     const interval = setInterval(fetchDashboardData, 5000)
     return () => clearInterval(interval)
   }, [navigate])
 
-  // Save updated settings back to the backend
+
   const saveSettings = async (newTracked, newBlocked, newFocusVal) => {
     try {
       const token = authService.getToken()
@@ -187,7 +189,7 @@ export default function Dashboard() {
 
   const scoreColor = (s) => s >= 75 ? '#10b981' : s >= 50 ? '#f59e0b' : '#ef4444'
 
-  // Safe data extraction variables
+
   const todayScore = dashboardData.today?.score ?? 0
   const todayLabel = dashboardData.today?.label || 'No Data Yet'
   const todayBreakdown = dashboardData.today?.breakdown || []
@@ -197,21 +199,37 @@ export default function Dashboard() {
   const weeklyList = dashboardData.weeklyData || []
   const monthlyList = dashboardData.monthlyData || []
   const weekActivitiesMap = dashboardData.weekActivitiesMap || {}
+  const yearlyList = dashboardData.yearlyData || []
   const todayActivities = dashboardData.activities || []
+  const doomScroll = dashboardData.doomScroll || { todayReminders: 0, weekReminders: 0, todayTime: '0s', weekTime: '0s' }
 
-  // Safe selection metrics
+
   const selectedWeekly = weeklyList[weeklyIndex] || { day: 'None', dateStr: '', isToday: false, score: 0, focus: '0s', distracted: '0s', topSite: 'None' }
   const selectedMonthly = monthlyList[monthlyIndex] || { day: 'None', dateRange: '', score: 0, avgDietScore: 0, focus: '0s', distracted: '0s', topSite: 'None', totalActivities: 0 }
+  const selectedYearly = yearlyList[yearlyIndex] || { day: 'None', fullLabel: '', isCurrentMonth: false, score: 0, avgDietScore: 0, focus: '0s', distracted: '0s', topSite: 'None', totalActivities: 0, totalTime: '0s' }
 
-  // Get activities for the selected day in weekly view
-  const selectedDayActivities = selectedWeekly.dateStr ? (weekActivitiesMap[selectedWeekly.dateStr] || []) : todayActivities
 
-  // Find current day index for highlighting
+  const hasWeekMap = Object.keys(weekActivitiesMap).length > 0
+  const selectedDayActivities = (() => {
+    // If we have the week activities map from backend, use it
+    if (hasWeekMap && selectedWeekly.dateStr) {
+      const dayActs = weekActivitiesMap[selectedWeekly.dateStr] || []
+      // For today, if weekMap is empty but we have todayActivities, use those
+      if (dayActs.length === 0 && selectedWeekly.isToday && todayActivities.length > 0) {
+        return todayActivities
+      }
+      return dayActs
+    }
+    // Fallback: no weekMap (old backend) — show today's activities
+    return todayActivities
+  })()
+
+
   const todayWeeklyIndex = weeklyList.findIndex(d => d.isToday)
 
   return (
     <div className="dash">
-      {/* Navbar */}
+
       <nav className="dash-nav">
         <Link to="/" className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-white/20 via-sky-200/20 to-violet-200/20 p-[1px] flex items-center justify-center shadow-glow-blue animate-pulse-slow">
@@ -229,12 +247,12 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      {/* Main Layout containing Sidebar and Main Content Panels */}
+
       <div className="dash-layout">
         
-        {/* Sidebar (User profile, Tracked site input, Focus blocking) */}
+
         <aside className="dash-sidebar">
-          {/* User Score Card */}
+
           <div className="sidebar-card sidebar-user">
             <div className="user-avatar-row">
               <div className="user-avatar">{user.username.charAt(0).toUpperCase()}</div>
@@ -258,7 +276,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Tracked websites Settings */}
+
           <div className="sidebar-card tracking-sites-card">
             <h4>🌐 Website Access</h4>
             <p className="sidebar-hint">Only activity on these websites will be tracked.</p>
@@ -277,7 +295,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Focus Mode Settings */}
+
           <div className="sidebar-card focus-block-card">
             <div className="focus-header">
               <h4>🎯 Focus Block</h4>
@@ -301,7 +319,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Feedback Card */}
+
           <div className="sidebar-card feedback-card">
             <h4>💬 Share Feedback</h4>
             <p className="sidebar-hint">Your feedback will be displayed publicly on the homepage!</p>
@@ -356,7 +374,7 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* Main Content Area: Grouped in two columns to align bottom boundaries */}
+
         <main className="dash-main">
           {loading ? (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--accent)' }}>
@@ -365,7 +383,7 @@ export default function Dashboard() {
           ) : (
             <>
               <div className="dash-col">
-                {/* Today's Diet Score Breakdown */}
+
                 <div className="panel-card metrics-card">
                   <h4>📊 Today's Metrics</h4>
                   <div className="score-label-tag" style={{ color: scoreColor(todayScore) }}>
@@ -384,7 +402,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Daily Activity Details Log with More Details functionality */}
+
                 <div className="panel-card top-sites-card activity-log-card">
                   <h4>🔍 {selectedWeekly.isToday || !selectedWeekly.dateStr ? "Today's" : `${selectedWeekly.day}'s`} Content Consumption</h4>
                   <p className="sidebar-hint" style={{ marginBottom: '12px' }}>
@@ -438,7 +456,7 @@ export default function Dashboard() {
                               </button>
                             </div>
 
-                            {/* Expanded Details section */}
+
                             {isExpanded && act.analysis && (
                               <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                 {act.channel && (
@@ -489,7 +507,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Top Websites List */}
+
                 <div className="panel-card top-sites-card domains-card">
                   <h4>🔝 Top Visited Domains</h4>
                   <div className="top-sites">
@@ -514,13 +532,52 @@ export default function Dashboard() {
               </div>
 
               <div className="dash-col">
-                {/* Historical Analytics Chart */}
+
+                <div className="panel-card" style={{ padding: '16px' }}>
+                  <h4>🌀 Doomscrolling Index</h4>
+                  <p className="sidebar-hint" style={{ marginBottom: '12px' }}>
+                    Reminders triggered when you scroll Shorts/Reels for 5+ minutes continuously.
+                  </p>
+                  <div className="detail-row-grid">
+                    <div className="detail-col-item">
+                      <span className="detail-lbl">Today</span>
+                      <span className="detail-val" style={{ color: doomScroll.todayReminders > 0 ? '#ef4444' : '#10b981' }}>
+                        {doomScroll.todayReminders} reminder{doomScroll.todayReminders !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="detail-col-item">
+                      <span className="detail-lbl">This Week</span>
+                      <span className="detail-val" style={{ color: doomScroll.weekReminders > 0 ? '#f59e0b' : '#10b981' }}>
+                        {doomScroll.weekReminders} reminder{doomScroll.weekReminders !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="detail-col-item">
+                      <span className="detail-lbl">Doom Time Today</span>
+                      <span className="detail-val" style={{ color: '#ef4444' }}>{doomScroll.todayTime}</span>
+                    </div>
+                    <div className="detail-col-item">
+                      <span className="detail-lbl">Doom Time Week</span>
+                      <span className="detail-val" style={{ color: '#f59e0b' }}>{doomScroll.weekTime}</span>
+                    </div>
+                  </div>
+                  {doomScroll.todayReminders === 0 && (
+                    <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px' }}>
+                      <p style={{ color: '#34d399', fontSize: '12px', margin: 0 }}>✅ No doomscrolling detected today. Keep it up!</p>
+                    </div>
+                  )}
+                  {doomScroll.todayReminders > 0 && (
+                    <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '8px' }}>
+                      <p style={{ color: '#fca5a5', fontSize: '12px', margin: 0 }}>⚠️ You were caught doomscrolling {doomScroll.todayReminders} time{doomScroll.todayReminders !== 1 ? 's' : ''} today. Short-form content reduces your attention span over time.</p>
+                    </div>
+                  )}
+                </div>
                 <div className="panel-card analytics-card">
                   <div className="card-header-toggle">
                     <h4>📈 Analytics</h4>
                     <div className="toggle-group">
                       <button className={chartPeriod === 'weekly' ? 'active' : ''} onClick={() => setChartPeriod('weekly')}>Weekly</button>
                       <button className={chartPeriod === 'monthly' ? 'active' : ''} onClick={() => setChartPeriod('monthly')}>Monthly</button>
+                      <button className={chartPeriod === 'yearly' ? 'active' : ''} onClick={() => setChartPeriod('yearly')}>Yearly</button>
                     </div>
                   </div>
                   
@@ -547,7 +604,7 @@ export default function Dashboard() {
                         ))}
                       </div>
                       
-                      {/* Selected Day Data Detail Card */}
+
                       <div className="chart-detail-box">
                         <span className="detail-date">
                           {selectedWeekly.day} {selectedWeekly.isToday ? '(Today)' : ''} — {selectedWeekly.dateStr}
@@ -574,7 +631,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                  ) : (
+                  ) : chartPeriod === 'monthly' ? (
                     <div className="chart-box">
                       <div className="score-label-tag">
                         Monthly Data (Click bars to inspect details)
@@ -597,7 +654,7 @@ export default function Dashboard() {
                         ))}
                       </div>
                       
-                      {/* Selected Week Data Detail Card */}
+
                       <div className="chart-detail-box">
                         <span className="detail-date">{selectedMonthly.day} — {selectedMonthly.dateRange || ''}</span>
                         <div className="detail-row-grid">
@@ -622,10 +679,60 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
+                  ) : (
+                    <div className="chart-box">
+                      <div className="score-label-tag">
+                        Yearly Data (Click bars to inspect monthly details)
+                      </div>
+                      <div className="score-mini-chart">
+                        {yearlyList.map((d, i) => (
+                          <div className={`mini-bar ${yearlyIndex === i ? 'active' : ''} ${d.isCurrentMonth ? 'today' : ''}`}
+                            key={i}
+                            style={{ height: `${Math.max(d.score, 5)}%` }}
+                            onClick={() => setYearlyIndex(i)}
+                            title={`Click to view data for ${d.fullLabel}${d.isCurrentMonth ? ' (Current)' : ''}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="mini-labels">
+                        {yearlyList.map((d, i) => (
+                          <span key={i} className={`${yearlyIndex === i ? 'active' : ''} ${d.isCurrentMonth ? 'today-label' : ''}`}>
+                            {d.day}
+                          </span>
+                        ))}
+                      </div>
+                      
+
+                      <div className="chart-detail-box">
+                        <span className="detail-date">
+                          {selectedYearly.fullLabel} {selectedYearly.isCurrentMonth ? '(Current)' : ''}
+                        </span>
+                        <div className="detail-row-grid">
+                          <div className="detail-col-item">
+                            <span className="detail-lbl">Avg Diet Score</span>
+                            <span className="detail-val" style={{ color: scoreColor(selectedYearly.avgDietScore || selectedYearly.score) }}>
+                              {selectedYearly.avgDietScore || selectedYearly.score}/100
+                            </span>
+                          </div>
+                          <div className="detail-col-item">
+                            <span className="detail-lbl">Focus Time</span>
+                            <span className="detail-val">{selectedYearly.focus}</span>
+                          </div>
+                          <div className="detail-col-item">
+                            <span className="detail-lbl">Distracted</span>
+                            <span className="detail-val">{selectedYearly.distracted}</span>
+                          </div>
+                          <div className="detail-col-item">
+                            <span className="detail-lbl">Activities</span>
+                            <span className="detail-val">{selectedYearly.totalActivities || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Suggestions */}
+
                 <div className="panel-card suggestions-card">
                   <h4>💡 Content Suggestions</h4>
                   <div className="suggest-list">
@@ -638,7 +745,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Improvements Log */}
+
                 <div className="panel-card improvements-card">
                   <h4>🔄 Improvements Log</h4>
                   <div className="improve-list">
