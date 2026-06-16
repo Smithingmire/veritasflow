@@ -50,7 +50,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const token = authService.getToken()
-      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/dashboard", {
+      const res = await fetch("http://localhost:5000/api/activity/dashboard", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()

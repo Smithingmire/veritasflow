@@ -83,13 +83,6 @@ function showDoomScrollReminder() {
                         padding: 12px 24px; font-size: 14px; font-weight: 600;
                         cursor: pointer; transition: transform 0.2s;
                     ">Close Tab</button>
-                    <button id="vf-doom-dismiss" style="
-                        background: rgba(255,255,255,0.08);
-                        color: #94a3b8; border: 1px solid rgba(255,255,255,0.1);
-                        border-radius: 10px; padding: 12px 24px;
-                        font-size: 14px; font-weight: 500;
-                        cursor: pointer; transition: transform 0.2s;
-                    ">5 More Minutes</button>
                 </div>
                 <p style="color: #475569; font-size: 11px; margin: 16px 0 0;">
                     Powered by VeritasFlow — AI Information Diet Tracker
@@ -101,14 +94,7 @@ function showDoomScrollReminder() {
     document.body.appendChild(overlay);
 
     document.getElementById("vf-doom-close").addEventListener("click", () => {
-        window.close();
-    });
-
-    document.getElementById("vf-doom-dismiss").addEventListener("click", () => {
-        overlay.remove();
-        // reset timer for another 5 minutes
-        doomScrollStart = Date.now();
-        reminderShown = false;
+        chrome.runtime.sendMessage({ type: "CLOSE_TAB" });
     });
 
     // notify background about the reminder

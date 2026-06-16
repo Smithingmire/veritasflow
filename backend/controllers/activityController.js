@@ -191,8 +191,8 @@ exports.getDashboard = async (req, res) => {
     startOfToday.setHours(0, 0, 0, 0);
     const todayActivities = userActivities.filter(act => new Date(act.timestamp) >= startOfToday);
 
-    // only show activities >= 90s in the UI
-    const MIN_DISPLAY_DURATION = 90;
+    // only hide very brief accidental visits (< 10s) from the content list
+    const MIN_DISPLAY_DURATION = 10;
     const todayActivitiesForDisplay = todayActivities.filter(act => act.duration >= MIN_DISPLAY_DURATION);
 
     // diet score: weighted by duration
@@ -239,9 +239,9 @@ exports.getDashboard = async (req, res) => {
       ]
     };
 
-    // top visited domains (today, >= 90s only)
+    // top visited domains: aggregate ALL today's activities
     const siteAggregations = {};
-    todayActivitiesForDisplay.forEach(act => {
+    todayActivities.forEach(act => {
       const dom = act.domain;
       if (!siteAggregations[dom]) {
         siteAggregations[dom] = { url: dom, timeRaw: 0, category: (act.analysis && act.analysis.contentCategory) || "General" };

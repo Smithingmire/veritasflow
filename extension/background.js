@@ -60,7 +60,7 @@ function fetchSettings() {
   chrome.storage.local.get("token", (res) => {
     if (!res.token) return;
     
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity/settings", {
+    fetch("http://localhost:5000/api/activity/settings", {
       headers: {
         "Authorization": `Bearer ${res.token}`
       }
@@ -163,7 +163,7 @@ function sendActivity(url, title, durationSeconds, isImmediate = false, channel 
 
     console.log(`Sending activity: ${title} (${url}) for ${durationSeconds}s`);
     
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity", {
+    fetch("http://localhost:5000/api/activity", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -382,6 +382,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.type === "CLOSE_TAB" && sender.tab) {
+    chrome.tabs.remove(sender.tab.id);
+    sendResponse({ success: true });
+    return true;
+  }
+
   if (message.type === "DOOMSCROLL_REMINDER") {
     console.log("Doomscroll reminder triggered:", message);
     chrome.storage.local.get(["token", "doomScrollCount"], (res) => {
@@ -390,7 +396,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const count = (res.doomScrollCount || 0) + 1;
       chrome.storage.local.set({ doomScrollCount: count });
 
-      fetch("https://veritasflow-yrbx.onrender.com/api/activity/doomscroll", {
+      fetch("http://localhost:5000/api/activity/doomscroll", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
