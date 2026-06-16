@@ -18,10 +18,16 @@ function getDomain(url) {
 function formatDuration(seconds) {
   if (seconds < 60) return `${Math.round(seconds)}s`;
   const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins}m`;
+  const remainingSecs = Math.round(seconds % 60);
+  if (mins < 60) {
+    return remainingSecs > 0 ? `${mins}m ${remainingSecs}s` : `${mins}m`;
+  }
   const hrs = Math.floor(mins / 60);
   const remainingMins = mins % 60;
-  return `${hrs}h ${remainingMins}m`;
+  if (remainingSecs > 0) {
+    return `${hrs}h ${remainingMins}m ${remainingSecs}s`;
+  }
+  return remainingMins > 0 ? `${hrs}h ${remainingMins}m` : `${hrs}h`;
 }
 
 exports.addActivity = async (req, res) => {
