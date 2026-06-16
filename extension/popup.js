@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Automatically redirect user to the website for registration once
         if (!res.signupRedirected) {
           setStorage({ signupRedirected: true }, () => {
-            openUrl("http://localhost:5173/auth?mode=signup");
+            openUrl("https://veritasflow.vercel.app/auth?mode=signup");
           });
         }
       }
@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fetch stats and history from the dashboard API
   function fetchDashboardData(token) {
-    fetch("http://localhost:5000/api/activity/dashboard", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity/dashboard", {
       headers: {
         "Authorization": `Bearer ${token}`
       }
@@ -162,13 +162,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Manual Register Link Click
   lnkRegister.addEventListener("click", () => {
-    openUrl("http://localhost:5173/auth?mode=signup");
+    openUrl("https://veritasflow.vercel.app/auth?mode=signup");
   });
 
   // Visit Dashboard Button Click
   if (btnDashboard) {
     btnDashboard.addEventListener("click", () => {
-      openUrl("http://localhost:5173/dashboard");
+      openUrl("https://veritasflow.vercel.app/dashboard");
     });
   }
 
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnMoreInfo = document.getElementById("btn-more-info");
   if (btnMoreInfo) {
     btnMoreInfo.addEventListener("click", () => {
-      openUrl("http://localhost:5173/dashboard");
+      openUrl("https://veritasflow.vercel.app/dashboard");
     });
   }
 
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnLogin.disabled = true;
     btnLogin.textContent = "Authenticating...";
 
-    fetch("http://localhost:5000/api/activity/auth/login", {
+    fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
