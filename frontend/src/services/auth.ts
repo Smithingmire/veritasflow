@@ -1,11 +1,11 @@
-/**
- * VeritasFlow — Authentication Service
- * Integrated with the Node.js backend.
- */
+const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:5000"
+  : "https://veritasflow-yrbx.onrender.com";
+
 class AuthService {
   async signup(username, email, password, consent) {
     try {
-      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/register", {
+      const res = await fetch(`${API_BASE}/api/activity/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password, consent })
@@ -14,6 +14,9 @@ class AuthService {
       if (data.success) {
         localStorage.setItem('vf_current_user', JSON.stringify(data.user));
         localStorage.setItem('vf_token', data.token);
+        
+        // Sync session with the extension
+        window.postMessage({ type: "VERITASFLOW_AUTH_SYNC", token: data.token, user: data.user }, "*");
         return { success: true };
       } else {
         return { success: false, message: data.message || "Registration failed." };
@@ -26,7 +29,7 @@ class AuthService {
 
   async login(username, password) {
     try {
-      const res = await fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/login", {
+      const res = await fetch(`${API_BASE}/api/activity/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
@@ -35,6 +38,9 @@ class AuthService {
       if (data.success) {
         localStorage.setItem('vf_current_user', JSON.stringify(data.user));
         localStorage.setItem('vf_token', data.token);
+
+        // Sync session with the extension
+        window.postMessage({ type: "VERITASFLOW_AUTH_SYNC", token: data.token, user: data.user }, "*");
         return { success: true };
       } else {
         return { success: false, message: data.message || "Invalid credentials." };
@@ -48,6 +54,8 @@ class AuthService {
   logout() {
     localStorage.removeItem('vf_current_user');
     localStorage.removeItem('vf_token');
+    // Sync session with the extension (clear it)
+    window.postMessage({ type: "VERITASFLOW_AUTH_SYNC", token: null, user: null }, "*");
   }
 
   getCurrentUser() {

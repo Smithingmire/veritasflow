@@ -191,8 +191,8 @@ exports.getDashboard = async (req, res) => {
     startOfToday.setHours(0, 0, 0, 0);
     const todayActivities = userActivities.filter(act => new Date(act.timestamp) >= startOfToday);
 
-    // only hide very brief accidental visits (< 10s) from the content list
-    const MIN_DISPLAY_DURATION = 10;
+    // show all activities logged by the extension (already filtered to >= 5s by extension)
+    const MIN_DISPLAY_DURATION = 0;
     const todayActivitiesForDisplay = todayActivities.filter(act => act.duration >= MIN_DISPLAY_DURATION);
 
     // diet score: weighted by duration

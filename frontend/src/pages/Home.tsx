@@ -29,7 +29,11 @@ export const LandingPage: React.FC = () => {
   const [userCount, setUserCount] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity/feedback/list")
+    const API_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "http://localhost:5000"
+      : "https://veritasflow-yrbx.onrender.com";
+
+    fetch(`${API_BASE}/api/activity/feedback/list`)
       .then(res => res.json())
       .then(data => {
         if (data && data.feedbacks) {
@@ -38,7 +42,7 @@ export const LandingPage: React.FC = () => {
       })
       .catch(err => console.error("Error fetching feedbacks:", err));
 
-    fetch("https://veritasflow-yrbx.onrender.com/api/activity/auth/users/count")
+    fetch(`${API_BASE}/api/activity/auth/users/count`)
       .then(res => res.json())
       .then(data => {
         if (data && data.success) {
