@@ -227,6 +227,27 @@ export default function Dashboard() {
     return todayActivities
   })()
 
+  // Helper to format total duration
+  const formatTotalTime = (activitiesList) => {
+    if (!activitiesList || activitiesList.length === 0) return "0s";
+    const totalSecs = activitiesList.reduce((sum, act) => sum + act.duration, 0);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const hours = Math.floor(mins / 60);
+    const displayMins = mins % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${displayMins}m`;
+    }
+    if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    }
+    return `${secs}s`;
+  };
+
+  const todayTotalTime = formatTotalTime(todayActivities);
+  const selectedDayTime = formatTotalTime(selectedDayActivities);
+
 
   const todayWeeklyIndex = weeklyList.findIndex(d => d.isToday)
 
@@ -389,8 +410,13 @@ export default function Dashboard() {
 
                 <div className="panel-card metrics-card">
                   <h4>📊 Today's Metrics</h4>
-                  <div className="score-label-tag" style={{ color: scoreColor(todayScore) }}>
-                    Today's Score: {todayScore}/100 ({todayLabel})
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                    <div className="score-label-tag" style={{ color: scoreColor(todayScore) }}>
+                      Today's Score: {todayScore}/100 ({todayLabel})
+                    </div>
+                    <div className="score-label-tag" style={{ color: 'var(--accent)' }}>
+                      ⏱️ Total Time: {todayTotalTime}
+                    </div>
                   </div>
                   <div className="breakdown">
                     {todayBreakdown.map((b, i) => (
@@ -407,7 +433,12 @@ export default function Dashboard() {
 
 
                 <div className="panel-card top-sites-card activity-log-card">
-                  <h4>🔍 {selectedWeekly.isToday || !selectedWeekly.dateStr ? "Today's" : `${selectedWeekly.day}'s`} Content Consumption</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <h4 style={{ margin: 0 }}>🔍 {selectedWeekly.isToday || !selectedWeekly.dateStr ? "Today's" : `${selectedWeekly.day}'s`} Content Consumption</h4>
+                    <span className="score-label-tag" style={{ color: 'var(--accent)', fontSize: '11px', padding: '2px 6px' }}>
+                      ⏱️ {selectedDayTime}
+                    </span>
+                  </div>
                   <p className="sidebar-hint" style={{ marginBottom: '12px' }}>
                     {selectedWeekly.isToday || !selectedWeekly.dateStr
                       ? 'Click "More Details" to see deep AI insights on content consumed today.'
