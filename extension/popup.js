@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Automatically redirect user to the website for registration once
         if (!res.signupRedirected) {
           setStorage({ signupRedirected: true }, () => {
-            openUrl("https://veritasflow.vercel.app/auth?mode=signup");
+            openUrl("https://veritasflow-gamma.vercel.app/auth?mode=signup");
           });
         }
       }
@@ -162,21 +162,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Manual Register Link Click
   lnkRegister.addEventListener("click", () => {
-    openUrl("https://veritasflow.vercel.app/auth?mode=signup");
+    openUrl("https://veritasflow-gamma.vercel.app/auth?mode=signup");
   });
 
   // Visit Dashboard Button Click
   if (btnDashboard) {
     btnDashboard.addEventListener("click", () => {
-      openUrl("https://veritasflow.vercel.app/dashboard");
+      openUrl("https://veritasflow-gamma.vercel.app/dashboard");
     });
   }
-
   // Visit Dashboard via more info button
   const btnMoreInfo = document.getElementById("btn-more-info");
   if (btnMoreInfo) {
     btnMoreInfo.addEventListener("click", () => {
-      openUrl("https://veritasflow.vercel.app/dashboard");
+      openUrl("https://veritasflow-gamma.vercel.app/dashboard");
     });
   }
 
